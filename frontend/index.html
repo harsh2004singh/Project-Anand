@@ -9,28 +9,39 @@
 </head>
 <body>
   <div class="app">
+    <!-- Header section -->
     <header class="chat-head">
       <div class="logo">
         <img src="https://tse2.mm.bing.net/th/id/OIP.aP8vhiKJdzFrgl4V65DzqQHaHw?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
              alt="GBU logo" onerror="this.replaceWith('A')">
       </div>
+
       <div class="title">
         <h1>ANAND</h1>
-        <p><span class="dot"></span><span id="status">Online</span> &middot; New student help</p>
+        <p>
+          <span class="dot"></span>
+          <span id="status">Online</span>
+          &middot; Student help
+        </p>
       </div>
+
       <button class="icon-btn" id="clearBtn" type="button" aria-label="Start a new chat" title="New chat">&#8635;</button>
     </header>
 
+    <!-- Chat messages -->
     <main class="messages" id="messages" aria-live="polite"></main>
 
+    <!-- Quick question suggestions -->
     <div class="chips" id="chips" aria-label="Suggested questions"></div>
 
+    <!-- Message input area -->
     <form class="composer" id="chatForm">
-      <input id="messageInput" type="text" placeholder="Ask about admission, fees, hostel..."
+      <input id="messageInput" type="text" placeholder="Ask about admissions, fees, hostel..."
              autocomplete="off" enterkeyhint="send" aria-label="Type your question">
       <button type="submit" id="sendBtn" aria-label="Send">Send</button>
     </form>
-    <p class="note">Anand GBU-Assistant</p>
+
+    <p class="note">Anand GBU Assistant</p>
   </div>
 
   <script src="script.js"></script>
