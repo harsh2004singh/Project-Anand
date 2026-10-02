@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#172033">
+  <title>ANAND | GBU Assistant</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="chat-head">
+      <div class="logo">
+        <img src="https://tse2.mm.bing.net/th/id/OIP.aP8vhiKJdzFrgl4V65DzqQHaHw?r=0&rs=1&pid=ImgDetMain&o=7&rm=3"
+             alt="GBU logo" onerror="this.replaceWith('A')">
+      </div>
+      <div class="title">
+        <h1>ANAND</h1>
+        <p><span class="dot"></span><span id="status">Online</span> &middot; New student help</p>
+      </div>
+      <button class="icon-btn" id="clearBtn" type="button" aria-label="Start a new chat" title="New chat">&#8635;</button>
+    </header>
+
+    <main class="messages" id="messages" aria-live="polite"></main>
+
+    <div class="chips" id="chips" aria-label="Suggested questions"></div>
+
+    <form class="composer" id="chatForm">
+      <input id="messageInput" type="text" placeholder="Ask about admission, fees, hostel..."
+             autocomplete="off" enterkeyhint="send" aria-label="Type your question">
+      <button type="submit" id="sendBtn" aria-label="Send">Send</button>
+    </form>
+    <p class="note">Anand GBU-Assistant</p>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

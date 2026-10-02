@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pydantic
+
+pathlib 
+typing
+pdf_qa
+python-multipart
