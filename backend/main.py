@@ -1,3 +1,8 @@
+"""ANAND - GBU Assistant backend.
+
+This file keeps the original API contracts and business logic intact while
+making the code easier to read and maintain for future updates.
+"""
 
 import json
 import random
@@ -224,36 +229,51 @@ CLASS_LOCATIONS = {
 # Helpers
 # ---------------------------------------------------------------------------
 def normalize(text: str) -> str:
-    text = text.lower().replace(".", "")
-    return re.sub(r"[^a-z0-9\s]", " ", text)
+    """Convert user input into a consistent lower-case, plain-text format."""
+    cleaned_text = text.lower().replace(".", "")
+    return re.sub(r"[^a-z0-9\s]", " ", cleaned_text)
 
 
 def has_phrase(text: str, phrase: str) -> bool:
+    """Check whether a phrase appears as a full word/term in the cleaned text."""
     return re.search(rf"\b{re.escape(phrase)}\b", text) is not None
 
 
 def detect_topic(message: str) -> Optional[str]:
-    text = normalize(message)
-    best, best_score = None, 0
+    """Detect the most relevant FAQ topic from the message."""
+    normalized_text = normalize(message)
+    best_topic, best_score = None, 0
+
     for topic_id, phrases in KEYWORDS.items():
-        score = sum(len(p.split()) for p in phrases if has_phrase(text, normalize(p).strip()))
+        score = sum(
+            len(phrase.split())
+            for phrase in phrases
+            if has_phrase(normalized_text, normalize(phrase).strip())
+        )
         if score > best_score:
-            best, best_score = topic_id, score
-    return best
+            best_topic, best_score = topic_id, score
+
+    return best_topic
 
 
 def small_talk(message: str) -> Optional[str]:
-    """Greetings, thanks, bye. Only used when no real topic was found."""
-    text = normalize(message)
+    """Handle greeting and polite short chat before actual FAQ handling."""
+    normalized_text = normalize(message)
+
     for phrases, replies in SMALL_TALK:
-        if any(has_phrase(text, p) for p in phrases):
+        if any(has_phrase(normalized_text, phrase) for phrase in phrases):
             return random.choice(replies)
     return None
 
 
 def find_courses(message: str) -> list[str]:
-    text = normalize(message)
-    return [cid for cid, aliases in COURSE_ALIASES.items() if any(has_phrase(text, a) for a in aliases)]
+    """Find course names mentioned in a user message."""
+    normalized_text = normalize(message)
+    return [
+        course_id
+        for course_id, aliases in COURSE_ALIASES.items()
+        if any(has_phrase(normalized_text, alias) for alias in aliases)
+    ]
 
 
 def compare_courses(a: str, b: str) -> dict:
@@ -300,21 +320,25 @@ class StudentProfile(BaseModel):
 # ---------------------------------------------------------------------------
 @app.get("/")
 def root():
+    """Simple health/info endpoint for the backend service."""
     return {"project": "ANAND", "part": 1, "module": "New Student Assistant"}
 
 
 @app.get("/topics")
 def topics():
+    """List all supported FAQ topics and titles."""
     return [{"id": k, "title": v["title"]} for k, v in FAQS.items()]
 
 
 @app.get("/topic/{topic_id}")
 def topic(topic_id: str):
+    """Return the answer text for a specific FAQ topic."""
     return FAQS.get(topic_id, {"title": "Not Found", "answer": "Topic not found."})
 
 
 @app.get("/courses")
 def courses():
+    """List all supported courses with their ids and levels."""
     return [{"id": k, "name": v["name"], "level": v["level"]} for k, v in COURSES.items()]
 
 
@@ -377,31 +401,44 @@ LEADS_FILE = Path("leads.jsonl")
 
 @app.post("/guidance")
 def guidance(profile: StudentProfile):
-    """Data gathering: collect basic details and return a personal admission checklist."""
-    q = profile.qualification.lower()
-    level = "PG" if any(w in q for w in ["graduat", "bachelor", "degree", "b.tech", "bba", "bca"]) else "UG"
-    options = [c["name"] for c in COURSES.values() if c["level"] == level]
+    """Collect basic details and return a personal admission checklist."""
+    qualification_text = profile.qualification.lower()
+    is_postgraduate = any(
+        keyword in qualification_text
+        for keyword in ["graduat", "bachelor", "degree", "b.tech", "bba", "bca"]
+    )
+    level = "PG" if is_postgraduate else "UG"
+    available_courses = [course["name"] for course in COURSES.values() if course["level"] == level]
+
+    category_note = ""
+    if profile.category and profile.category.lower() != "general":
+        category_note = ", category certificate"
 
     steps = [
-        f"Courses you can look at: {', '.join(options)}.",
+        f"Courses you can look at: {', '.join(available_courses)}.",
         "Read the official admission notice for eligibility, dates and seats.",
         "Check if your course needs an entrance exam.",
         "Register online and fill in the application form.",
         "Keep your documents ready: marksheets, ID proof, photos"
-        + (", category certificate" if profile.category and profile.category.lower() != "general" else "")
+        + category_note
         + ", and migration/transfer certificate if needed.",
         "Pay the fee as per the latest fee notice.",
         "Attend counselling and document check when you are called.",
     ]
+
     if profile.needs_hostel:
         steps.append("Apply for the hostel separately and read the hostel rules.")
 
     saved = False
     if profile.consent:
         record = {**profile.model_dump(), "time": datetime.now(timezone.utc).isoformat()}
-        with LEADS_FILE.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(record) + "\n")
+        with LEADS_FILE.open("a", encoding="utf-8") as file:
+            file.write(json.dumps(record) + "\n")
         saved = True
 
-    return {"greeting": f"Hi {profile.name}! 😊 Here is your admission checklist.",
-            "checklist": steps, "details_saved": saved, "note": NOTICE}
+    return {
+        "greeting": f"Hi {profile.name}! 😊 Here is your admission checklist.",
+        "checklist": steps,
+        "details_saved": saved,
+        "note": NOTICE,
+    }
